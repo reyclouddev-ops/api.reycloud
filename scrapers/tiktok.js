@@ -1,86 +1,55 @@
 const axios = require("axios");
 
-const browser = axios.create({
+const client = axios.create({
+    timeout: 30000,
     headers: {
-        "user-agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/138.0.0.0 Safari/537.36",
-        accept: "*/*",
-        origin: "https://www.tikwm.com",
-        referer: "https://www.tikwm.com/"
-    },
-    timeout: 30000
+        "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/138.0.0.0 Safari/537.36"
+    }
 });
 
-async function tiktok(url) {
+module.exports = async (url) => {
 
-    if (!url) throw new Error("URL kosong.");
+    if (!url)
+        throw new Error("URL TikTok wajib diisi.");
 
-    // Ambil cookie terlebih dahulu
-    const home = await browser.get("https://www.tikwm.com/");
+    // nanti request TikWM atau parser TikTok masuk di sini
 
-    const cookies = home.headers["set-cookie"]
-        ?.map(v => v.split(";")[0])
-        .join("; ");
+    const raw = await fetchTikTok(url);
 
-    // Request API TikWM
-    const payload = new URLSearchParams({
-        url,
-        hd: "1"
-    });
+    return format(raw);
 
-    const { data } = await browser.post(
-        "https://www.tikwm.com/api/",
-        payload.toString(),
-        {
-            headers: {
-                cookie: cookies,
-                "content-type":
-                    "application/x-www-form-urlencoded; charset=UTF-8"
-            }
-        }
-    );
+};
 
-    if (data.code !== 0)
-        throw new Error(data.msg);
+async function fetchTikTok(url) {
 
-    const x = data.data;
+    // TODO
+    // Request TikWM / TikTok
 
-    return {
-        id: x.id,
-        type: x.images?.length ? "image" : "video",
-
-        title: x.title,
-
-        author: {
-            id: x.author.id,
-            username: x.author.unique_id,
-            nickname: x.author.nickname,
-            avatar: x.author.avatar
-        },
-
-        stats: {
-            views: x.play_count,
-            likes: x.digg_count,
-            comments: x.comment_count,
-            shares: x.share_count
-        },
-
-        video: {
-            nowm: x.play,
-            wm: x.wmplay,
-            hd: x.hdplay,
-            cover: x.cover
-        },
-
-        music: {
-            title: x.music_info?.title,
-            author: x.music_info?.author,
-            url: x.music
-        },
-
-        images: x.images || []
-    };
+    return {};
 
 }
 
-module.exports = tiktok;
+function format(data) {
+
+    return {
+
+        id: data.id,
+
+        type: data.type,
+
+        title: data.title,
+
+        author: data.author,
+
+        statistics: data.statistics,
+
+        video: data.video,
+
+        music: data.music,
+
+        images: data.images
+
+    };
+
+}
